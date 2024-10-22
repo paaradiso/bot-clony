@@ -1,10 +1,9 @@
 '''
 Handle purgatory role assignment requiring multiple helper votes and log the assignment
 '''
+import asyncio
 import logging
 import os
-
-import asyncio
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -152,20 +151,21 @@ class Purgatory(commands.Cog):
                     await channel.delete_messages(messages_to_delete)
                     batch_count = len(messages_to_delete)
                     total_deleted += batch_count
-                    log.info(f"Purged {batch_count} messages in channel #{channel} for user {user_id}. Total: {total_deleted}")
+                    log.info(
+                        "Purged %d messages in channel #%s for user %d. Total: %d",
+                        batch_count, channel, user_id, total_deleted
+                    )
                     messages_to_delete.clear()
 
-
-
             except discord.errors.Forbidden:
-                continue # hopefully already deleted?
+                continue  # hopefully already deleted?
             except discord.errors.HTTPException as exc:
-                log.error(f"Rate-limited during purge in #{channel.name}: {exc}")
+                log.error("Rate-limited during purge in #%s: %s", channel.name, exc)
                 await asyncio.sleep(5)  # wait if rate-limited (i don't think this applies because i changed the logic)
             except Exception as exc:
-                log.error(f"Error purging messages in #{channel.name}: {exc}")
+                log.error("Error purging messages in #%s: %s", channel.name, exc)
 
-        log.info(f"Total messages purged for user {user_id}: {total_deleted}")
+        log.info("Total messages purged for user %d: %d", user_id, total_deleted)
         return total_deleted
 
 
